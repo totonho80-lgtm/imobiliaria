@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#12161d">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Agenda">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%2312161d'/%3E%3Crect x='18' y='24' width='64' height='58' rx='8' fill='%23f0ece1'/%3E%3Crect x='18' y='24' width='64' height='16' fill='%23c1533b'/%3E%3Ctext x='50' y='68' font-family='Georgia,serif' font-size='34' font-weight='700' fill='%2312161d' text-anchor='middle'%3E17%3C/text%3E%3C/svg%3E">
+<title>Agenda · Marcar reunião</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12161d;
+    --surface:#1b212b;
+    --surface-2:#232a35;
+    --line:#333c49;
+    --paper:#f0ece1;
+    --paper-dim:#b9b3a4;
+    --amber:#d6a34d;
+    --amber-dim:#8a6d3b;
+    --terracotta:#c1533b;
+    --green:#3fa687;
+    --green-dim:#2c7562;
+    --radius-s:6px;
+    --radius-m:12px;
+    --font-display:'Fraunces', serif;
+    --font-ui:'IBM Plex Sans', sans-serif;
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:var(--font-ui);
+    line-height:1.5;
+    padding:32px 16px calc(64px + env(safe-area-inset-bottom));
+    padding-left:max(16px, env(safe-area-inset-left));
+    padding-right:max(16px, env(safe-area-inset-right));
+    padding-top:max(32px, env(safe-area-inset-top));
+    min-height:100vh;
+    min-height:100dvh;
+    overflow-x:hidden;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+  }
+
+  .app{max-width:720px;margin:0 auto;}
+
+  .masthead{margin-bottom:28px;}
+  .masthead .eyebrow{
+    font-size:13px;
+    color:var(--amber);
+    letter-spacing:0.02em;
+    margin:0 0 6px;
+  }
+  .masthead h1{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:clamp(28px,5vw,38px);
+    margin:0;
+    color:var(--paper);
+  }
+  .masthead p{
+    color:var(--paper-dim);
+    font-size:15px;
+    max-width:46ch;
+    margin:8px 0 0;
+  }
+
+  .layout{
+    display:grid;
+    grid-template-columns:180px 1fr;
+    gap:20px;
+    align-items:start;
+  }
+  @media (max-width:600px){
+    .layout{grid-template-columns:1fr;}
+    .calendar-block{position:static;}
+  }
+
+  .calendar-block{
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:var(--radius-m);
+    overflow:hidden;
+    position:sticky;
+    top:20px;
+  }
+  .calendar-block .month{
+    background:var(--terracotta);
+    color:var(--paper);
+    text-align:center;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:0.04em;
+    padding:8px 0;
+  }
+  .calendar-block .day{
+    font-family:var(--font-display);
+    font-size:64px;
+    font-weight:600;
+    text-align:center;
+    line-height:1;
+    padding:18px 0 4px;
+  }
+  .calendar-block .weekday{
+    text-align:center;
+    font-size:13px;
+    color:#565049;
+    padding-bottom:14px;
+    text-transform:capitalize;
+  }
+  .calendar-block .time{
+    border-top:1px dashed #c9c2b2;
+    text-align:center;
+    padding:12px 0;
+    font-size:20px;
+    font-weight:600;
+    font-variant-numeric:tabular-nums;
+  }
+  .calendar-block .time small{
+    display:block;
+    font-family:var(--font-ui);
+    font-weight:500;
+    font-size:11px;
+    color:#565049;
+    margin-top:2px;
+  }
+
+  form.card, section.card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius-m);
+    padding:22px;
+  }
+
+  label{
+    display:block;
+    font-size:13px;
+    color:var(--paper-dim);
+    margin-bottom:6px;
+  }
+  .field{margin-bottom:16px;}
+  .field-hint{
+    font-size:12.5px;
+    color:var(--green);
+    margin:6px 0 0;
+  }
+  .field-hint a{color:var(--amber);}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media (max-width:420px){.row{grid-template-columns:1fr;}}
+
+  input[type=text], input[type=date], input[type=time], input[type=tel], select, textarea{
+    width:100%;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    color:var(--paper);
+    font-family:var(--font-ui);
+    font-size:16px;
+    padding:12px;
+    border-radius:var(--radius-s);
+    min-height:46px;
+    -webkit-appearance:none;
+    appearance:none;
+  }
+  select{
+    background-image:linear-gradient(45deg, transparent 50%, var(--paper-dim) 50%), linear-gradient(135deg, var(--paper-dim) 50%, transparent 50%);
+    background-position:calc(100% - 18px) center, calc(100% - 13px) center;
+    background-size:5px 5px, 5px 5px;
+    background-repeat:no-repeat;
+    padding-right:34px;
+  }
+  textarea{resize:vertical;min-height:70px;-webkit-appearance:none;appearance:none;}
+  input:focus, select:focus, textarea:focus{
+    outline:2px solid var(--amber);
+    outline-offset:1px;
+    border-color:var(--amber);
+  }
+
+  button, a.btn-ghost{
+    font-family:var(--font-ui);
+    font-weight:600;
+    font-size:15px;
+    border:none;
+    border-radius:var(--radius-s);
+    padding:13px 18px;
+    min-height:48px;
+    cursor:pointer;
+    touch-action:manipulation;
+    -webkit-user-select:none;
+    user-select:none;
+    transition:transform 0.08s ease, background 0.15s ease;
+  }
+  button:focus-visible, a.btn-ghost:focus-visible{outline:2px solid var(--paper);outline-offset:2px;}
+  button:active, a.btn-ghost:active{transform:scale(0.97);}
+
+  .btn-primary{background:var(--amber);color:#241c0d;width:100%;}
+  .btn-primary:hover{background:#e2b263;}
+
+  .btn-whatsapp{background:var(--green);color:#0d2119;width:100%;}
+  .btn-whatsapp:hover{background:#4fc19f;}
+
+  .btn-ghost{
+    background:transparent;
+    color:var(--paper);
+    border:1px solid var(--line);
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-decoration:none;
+    box-sizing:border-box;
+  }
+  .btn-ghost:hover{border-color:var(--paper-dim);}
+
+  #result{margin-top:20px;display:grid;gap:16px;}
+
+  .event-summary{
+    display:flex;
+    gap:14px;
+    align-items:flex-start;
+  }
+  .event-summary .stripe{
+    width:4px;
+    align-self:stretch;
+    background:var(--terracotta);
+    border-radius:2px;
+  }
+  .event-summary h2{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:22px;
+    margin:0 0 8px;
+  }
+  .event-summary dl{
+    margin:0;
+    font-size:14px;
+    color:var(--paper-dim);
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:4px 10px;
+  }
+  .event-summary dt{color:var(--paper-dim);}
+  .event-summary dd{margin:0;color:var(--paper);}
+  .event-summary dd a{color:var(--amber);}
+
+  .action-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+  @media (max-width:420px){.action-row{grid-template-columns:1fr;}}
+  .os-hint{
+    font-size:13px;
+    color:var(--paper-dim);
+    margin:16px 0 0;
+  }
+  .btn-ghost.recommended{
+    background:var(--amber);
+    color:#241c0d;
+    border-color:var(--amber);
+    font-weight:700;
+  }
+  .btn-ghost.recommended:hover{background:#e2b263;}
+
+  .whatsapp-card h3{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:18px;
+    margin:0 0 4px;
+  }
+  .whatsapp-card .hint{
+    font-size:13px;
+    color:var(--paper-dim);
+    margin:0 0 14px;
+  }
+
+  .status{
+    font-size:13px;
+    color:var(--green);
+    margin-top:8px;
+    min-height:16px;
+  }
+
+  .footnote{
+    font-size:12px;
+    color:var(--paper-dim);
+    margin-top:28px;
+    max-width:56ch;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="masthead">
+    <p class="eyebrow">Agenda de reuniões</p>
+    <h1>Marcar compromisso</h1>
+    <p>Preencha os dados da reunião, gere o convite e envie para o cliente pelo WhatsApp com um link que adiciona o evento direto na agenda dele.</p>
+  </div>
+
+  <div class="layout">
+    <div class="calendar-block" id="calBlock" aria-hidden="true">
+      <div class="month" id="calMonth">— · —</div>
+      <div class="day" id="calDay">--</div>
+      <div class="weekday" id="calWeekday">selecione a data</div>
+      <div class="time" id="calTime">--:--
+        <small id="calDuration">duração</small>
+      </div>
+    </div>
+
+    <form class="card" id="eventForm">
+      <div class="field">
+        <label for="titulo">Título do compromisso</label>
+        <input type="text" id="titulo" placeholder="Reunião com [cliente]" required>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="data">Data</label>
+          <input type="date" id="data" required>
+        </div>
+        <div class="field">
+          <label for="hora">Horário</label>
+          <input type="time" id="hora" required>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="duracao">Duração</label>
+          <select id="duracao">
+            <option value="30">30 min</option>
+            <option value="60" selected>1 hora</option>
+            <option value="90">1h30</option>
+            <option value="120">2 horas</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="local">Local</label>
+          <input type="text" id="local" placeholder="Endereço, ou cole o link do Google Maps" autocomplete="off">
+          <p class="field-hint" id="localHint" hidden></p>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="descricao">Descrição / pauta</label>
+        <textarea id="descricao" placeholder="Assunto da reunião, observações..."></textarea>
+      </div>
+
+      <button type="submit" class="btn-primary">Criar agendamento</button>
+    </form>
+  </div>
+
+  <div id="result" hidden>
+
+    <section class="card">
+      <div class="event-summary">
+        <div class="stripe"></div>
+        <div>
+          <h2 id="sumTitulo">—</h2>
+          <dl>
+            <dt>Data</dt><dd id="sumData">—</dd>
+            <dt>Horário</dt><dd id="sumHora">—</dd>
+            <dt>Local</dt><dd id="sumLocal">—</dd>
+          </dl>
+        </div>
+      </div>
+
+      <p class="os-hint" id="osHint"></p>
+      <div class="action-row">
+        <a class="btn-ghost" id="googleLink" href="#" target="_blank" rel="noopener">📅 Adicionar ao Google Agenda</a>
+        <a class="btn-ghost" id="icsLink" href="#" download="convite.ics">⬇️ Baixar convite (.ics)</a>
+      </div>
+      <p class="status" id="calStatus"></p>
+    </section>
+
+    <section class="card whatsapp-card">
+      <h3>Enviar pelo WhatsApp</h3>
+      <p class="hint">Deixe o número em branco para escolher o contato na hora de enviar, ou preencha para ir direto à conversa.</p>
+
+      <div class="field">
+        <label for="whatsNumero">Número (opcional)</label>
+        <input type="tel" id="whatsNumero" placeholder="55 65 99999-9999">
+      </div>
+
+      <div class="field">
+        <label for="whatsMensagem">Mensagem</label>
+        <textarea id="whatsMensagem" style="min-height:150px;"></textarea>
+      </div>
+
+      <button type="button" class="btn-whatsapp" id="btnWhats">Enviar via WhatsApp</button>
+    </section>
+
+  </div>
+
+  <p class="footnote">O link do Google Agenda funciona no iPhone e no Android — ao abrir, o navegador oferece salvar o evento na agenda padrão do aparelho. O arquivo .ics é uma alternativa que abre direto no app de Calendário nativo (Apple Calendar / Google Agenda) quando baixado. Para usar como um app, abra este arquivo no navegador do celular e escolha "Adicionar à Tela de Início".</p>
+
+</div>
+
+<script>
+  const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const DIAS_SEMANA = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+  const TZID = 'America/Cuiaba';
+
+  const els = {
+    titulo: document.getElementById('titulo'),
+    data: document.getElementById('data'),
+    hora: document.getElementById('hora'),
+    duracao: document.getElementById('duracao'),
+    local: document.getElementById('local'),
+    localHint: document.getElementById('localHint'),
+    descricao: document.getElementById('descricao'),
+    calMonth: document.getElementById('calMonth'),
+    calDay: document.getElementById('calDay'),
+    calWeekday: document.getElementById('calWeekday'),
+    calTime: document.getElementById('calTime'),
+    calDuration: document.getElementById('calDuration'),
+    result: document.getElementById('result'),
+    sumTitulo: document.getElementById('sumTitulo'),
+    sumData: document.getElementById('sumData'),
+    sumHora: document.getElementById('sumHora'),
+    sumLocal: document.getElementById('sumLocal'),
+    googleLink: document.getElementById('googleLink'),
+    icsLink: document.getElementById('icsLink'),
+    osHint: document.getElementById('osHint'),
+    calStatus: document.getElementById('calStatus'),
+    whatsNumero: document.getElementById('whatsNumero'),
+    whatsMensagem: document.getElementById('whatsMensagem'),
+    btnWhats: document.getElementById('btnWhats'),
+  };
+
+  function pad(n){ return String(n).padStart(2,'0'); }
+
+  function detectOS(){
+    const ua = navigator.userAgent || '';
+    const isIOS = /iPhone|iPad|iPod/.test(ua) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if(isIOS) return 'ios';
+    if(/Android/.test(ua)) return 'android';
+    return 'other';
+  }
+  const detectedOS = detectOS();
+
+  function applyOSRecommendation(){
+    els.googleLink.classList.remove('recommended');
+    els.icsLink.classList.remove('recommended');
+
+    if(detectedOS === 'ios'){
+      els.icsLink.classList.add('recommended');
+      els.osHint.textContent = 'No iPhone: toque em "Baixar convite", depois abra o download na parte de baixo da tela — o Calendário abre com o evento pronto para salvar.';
+    } else if(detectedOS === 'android'){
+      els.googleLink.classList.add('recommended');
+      els.osHint.textContent = 'No Android: toque em "Adicionar ao Google Agenda" — abre direto no app da Agenda para salvar em um toque.';
+    } else {
+      els.osHint.textContent = 'No computador: qualquer um dos dois funciona — o link abre o Google Agenda, e o .ics pode ser importado em qualquer app de calendário.';
+    }
+  }
+
+  function escapeHtml(str){
+    return String(str)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+  function extractMapsInfo(text){
+    const info = {};
+    let m = text.match(/@(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)/);
+    if(!m) m = text.match(/[?&]q=(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)/);
+    if(!m) m = text.match(/[?&]ll=(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)/);
+    if(!m) m = text.match(/^\s*(-?\d{1,3}\.\d{3,}),\s*(-?\d{1,3}\.\d{3,})\s*$/);
+    if(m){ info.lat = m[1]; info.lng = m[2]; }
+
+    const placeMatch = text.match(/\/maps\/place\/([^\/@]+)/);
+    if(placeMatch){
+      try{ info.name = decodeURIComponent(placeMatch[1].replace(/\+/g, ' ')); }
+      catch(e){ info.name = placeMatch[1].replace(/\+/g, ' '); }
+    }
+
+    info.isShort = /maps\.app\.goo\.gl|goo\.gl\/maps/i.test(text);
+    info.isMapsLink = info.isShort || /google\.[a-z.]+\/maps/i.test(text);
+    return info;
+  }
+
+  function handleLocalPaste(){
+    const val = els.local.value.trim();
+    if(!val) return;
+    const info = extractMapsInfo(val);
+
+    if(!info.isMapsLink && !(info.lat && info.lng)){
+      els.localHint.hidden = true;
+      return;
+    }
+
+    if(info.name){
+      els.local.value = info.name;
+      els.localHint.textContent = '📍 Endereço reconhecido a partir do link colado.';
+      els.localHint.hidden = false;
+    } else if(info.lat && info.lng){
+      els.local.value = info.lat + ', ' + info.lng;
+      els.localHint.innerHTML = '📍 Coordenadas reconhecidas · <a href="https://www.google.com/maps?q=' + info.lat + ',' + info.lng + '" target="_blank" rel="noopener">ver no mapa</a>';
+      els.localHint.hidden = false;
+    } else if(info.isShort){
+      els.localHint.textContent = '🔗 Link curto colado — mantido como endereço.';
+      els.localHint.hidden = false;
+    } else {
+      els.localHint.hidden = true;
+    }
+  }
+
+  els.local.addEventListener('input', function(e){
+    if(e.inputType === 'insertFromPaste'){
+      handleLocalPaste();
+    } else {
+      els.localHint.hidden = true;
+    }
+  });
+  els.local.addEventListener('paste', function(){
+    setTimeout(handleLocalPaste, 0);
+  });
+
+  function parseLocalDateTime(dataStr, horaStr){
+    // dataStr: YYYY-MM-DD, horaStr: HH:MM
+    const [y,m,d] = dataStr.split('-').map(Number);
+    const [hh,mm] = horaStr.split(':').map(Number);
+    return new Date(y, m-1, d, hh, mm, 0);
+  }
+
+  function updatePreview(){
+    const dataStr = els.data.value;
+    const horaStr = els.hora.value;
+    const durMin = parseInt(els.duracao.value, 10);
+
+    if(!dataStr){
+      els.calMonth.textContent = '— · —';
+      els.calDay.textContent = '--';
+      els.calWeekday.textContent = 'selecione a data';
+      els.calTime.childNodes[0].nodeValue = '--:-- ';
+      els.calDuration.textContent = 'duração';
+      return;
+    }
+
+    const start = parseLocalDateTime(dataStr, horaStr || '00:00');
+    els.calMonth.textContent = MESES[start.getMonth()] + ' · ' + start.getFullYear();
+    els.calDay.textContent = pad(start.getDate());
+    els.calWeekday.textContent = DIAS_SEMANA[start.getDay()] + '-feira';
+
+    if(horaStr){
+      els.calTime.childNodes[0].nodeValue = horaStr + ' ';
+      els.calDuration.textContent = durMin + ' min';
+    } else {
+      els.calTime.childNodes[0].nodeValue = '--:-- ';
+      els.calDuration.textContent = 'duração';
+    }
+  }
+
+  ['input','change'].forEach(evt=>{
+    els.data.addEventListener(evt, updatePreview);
+    els.hora.addEventListener(evt, updatePreview);
+    els.duracao.addEventListener(evt, updatePreview);
+  });
+
+  function icsEscape(str){
+    return String(str)
+      .replace(/\\/g,'\\\\')
+      .replace(/;/g,'\\;')
+      .replace(/,/g,'\\,')
+      .replace(/\n/g,'\\n');
+  }
+
+  function formatICSDateTime(dt){
+    return dt.getFullYear() + pad(dt.getMonth()+1) + pad(dt.getDate()) +
+      'T' + pad(dt.getHours()) + pad(dt.getMinutes()) + pad(dt.getSeconds());
+  }
+
+  function formatICSDateTimeUTC(dt){
+    return dt.getUTCFullYear() + pad(dt.getUTCMonth()+1) + pad(dt.getUTCDate()) +
+      'T' + pad(dt.getUTCHours()) + pad(dt.getUTCMinutes()) + pad(dt.getUTCSeconds()) + 'Z';
+  }
+
+  function buildICS(ev){
+    const uid = 'agenda-' + Date.now() + '@marcao.local';
+    const lines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Agenda//Marcao//PT',
+      'CALSCALE:GREGORIAN',
+      'BEGIN:VEVENT',
+      'UID:' + uid,
+      'DTSTAMP:' + formatICSDateTimeUTC(new Date()),
+      'DTSTART:' + formatICSDateTime(ev.start),
+      'DTEND:' + formatICSDateTime(ev.end),
+      'SUMMARY:' + icsEscape(ev.titulo),
+      'LOCATION:' + icsEscape(ev.local || ''),
+      'DESCRIPTION:' + icsEscape(ev.descricao || ''),
+      'BEGIN:VALARM',
+      'TRIGGER:-PT1H',
+      'ACTION:DISPLAY',
+      'DESCRIPTION:Lembrete de compromisso',
+      'END:VALARM',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ];
+    return lines.join('\r\n');
+  }
+
+  function buildGoogleCalendarLink(ev){
+    const fmt = d => d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + 'T' + pad(d.getHours()) + pad(d.getMinutes()) + '00';
+    const dates = fmt(ev.start) + '/' + fmt(ev.end);
+    const params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: ev.titulo,
+      dates: dates,
+      details: ev.descricao || '',
+      location: ev.local || '',
+      ctz: TZID
+    });
+    return 'https://calendar.google.com/calendar/render?' + params.toString();
+  }
+
+  function formatDataLegivel(d){
+    return DIAS_SEMANA[d.getDay()].charAt(0).toUpperCase() + DIAS_SEMANA[d.getDay()].slice(1) +
+      '-feira, ' + pad(d.getDate()) + ' de ' + MESES[d.getMonth()] + ' de ' + d.getFullYear();
+  }
+
+  let currentGoogleLink = '';
+
+  document.getElementById('eventForm').addEventListener('submit', function(e){
+    e.preventDefault();
+
+    const titulo = els.titulo.value.trim();
+    const dataStr = els.data.value;
+    const horaStr = els.hora.value;
+    const durMin = parseInt(els.duracao.value, 10);
+    const local = els.local.value.trim();
+    const descricao = els.descricao.value.trim();
+
+    if(!titulo || !dataStr || !horaStr){
+      els.calStatus.textContent = 'Preencha título, data e horário.';
+      return;
+    }
+
+    const start = parseLocalDateTime(dataStr, horaStr);
+    const end = new Date(start.getTime() + durMin * 60000);
+    const ev = { titulo, local, descricao, start, end };
+
+    // Resumo
+    els.sumTitulo.textContent = titulo;
+    els.sumData.textContent = formatDataLegivel(start);
+    els.sumHora.textContent = horaStr + ' — ' + pad(end.getHours()) + ':' + pad(end.getMinutes()) + ' (' + durMin + ' min)';
+    els.sumLocal.innerHTML = local
+      ? escapeHtml(local) + ' · <a href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(local) + '" target="_blank" rel="noopener">ver no mapa</a>'
+      : 'não informado';
+
+    // Google Calendar
+    currentGoogleLink = buildGoogleCalendarLink(ev);
+    els.googleLink.href = currentGoogleLink;
+
+    // ICS
+    const icsContent = buildICS(ev);
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    els.icsLink.href = url;
+    els.icsLink.download = 'convite-' + dataStr + '.ics';
+
+    // Mensagem WhatsApp
+    const msg =
+      '📅 *' + titulo + '*\n' +
+      '🗓️ ' + formatDataLegivel(start) + '\n' +
+      '⏰ ' + horaStr + (local ? '\n📍 ' + local : '') +
+      (descricao ? '\n\n' + descricao : '') +
+      '\n\n👉 Adicionar à agenda: ' + currentGoogleLink +
+      '\n\n⏳ Lembrete automático 1h antes do horário.';
+    els.whatsMensagem.value = msg;
+
+    els.result.hidden = false;
+    applyOSRecommendation();
+    els.calStatus.textContent = 'Convite gerado.';
+    els.result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  els.btnWhats.addEventListener('click', function(){
+    const numero = els.whatsNumero.value.replace(/\D/g,'');
+    const texto = encodeURIComponent(els.whatsMensagem.value);
+    const url = numero
+      ? 'https://wa.me/' + numero + '?text=' + texto
+      : 'https://wa.me/?text=' + texto;
+    // Navegação direta funciona melhor para abrir o app do WhatsApp no celular
+    window.location.href = url;
+  });
+
+  updatePreview();
+</script>
+
+</body>
+</html>
